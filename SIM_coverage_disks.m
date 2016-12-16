@@ -47,7 +47,7 @@ KEEP_IN_REGION = 1;
 PLOT_STATE = 1;
 
 % Save the network state
-SAVE_FRAMES = 1;
+SAVE_FRAMES = 0;
 
 % Save the results to file
 SAVE_RESULTS = 0;
@@ -75,13 +75,10 @@ addpath( genpath('Functions') );
 
 
 % Load region
-region = importdata('../Input Files/region.txt');
+region = importdata('Input Files/region.txt');
 axis_scale = [ -0.5 3.5 -0.5 3.5 ];
 
-% region = importdata('../Input Files/region_cb_scaled.txt');
-% axis_scale = [ -0.5 1.5 -0.5 1.5 ];
-
-% region = importdata('../Input Files/region_pi.txt');
+% region = importdata('Input Files/region_pi.txt');
 % sc = 0.6;
 % axis_scale = [-sc sc -sc sc];
 
@@ -95,10 +92,9 @@ rarea = polyarea_nan(region(1,:), region(2,:));
 
 
 % Load nodes
-% x = importdata('../Input Files/col_avoidance_2_nodes.txt');
-x = importdata('../Input Files/col_avoidance_3_nodes.txt');
-% x = importdata('../Input Files/col_avoidance_10_nodes.txt');
-% x = importdata('../Input Files/RobSys_4_nodes.txt');
+% x = importdata('Input Files/2_nodes.txt');
+x = importdata('Input Files/3_nodes.txt');
+% x = importdata('Input Files/10_nodes.txt');
 x = x(2:end);
 N = length( x ) / 2;
 x = reshape(x, 2, N);
