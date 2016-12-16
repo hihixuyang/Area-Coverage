@@ -20,6 +20,9 @@
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 % SOFTWARE.
 
+% Simulation for area coverage of a convex region by circular sensors
+% Created 5/10/2016
+
 clear variables
 close all
 
@@ -33,24 +36,23 @@ CTRL_LAW = 'GV_COMPLETE';
 
 % Use a finite communication range
 FINITE_COMM_RANGE = 0;
+
 % Prevent robots from colliding when coming close
 STOP_COLLISIONS = 0;
+
 % Keep the nodes inside the region at all times
 KEEP_IN_REGION = 1;
+
 % Show the network state in each iteration
 PLOT_STATE = 1;
+
 % Save the network state in each iteration
 SAVE_FRAMES = 0;
+
 % Save the results to file
 SAVE_RESULTS = 0;
 
-% Common uncertainty disk radius. Can be set to differ between nodes
-% Set to 0 for exact positioning
-uncert_rad = 0.05;
-% Common sensing disk radius. Must be common among nodes
-sensing_rad = 0.5;
-% Common communication radius. Can be set to differ between nodes
-comm_rad = 0.8;
+% Uncertainty disk radius (can be set different for each node
 
 % Simulation duration in seconds
 Tfinal = 2;
@@ -59,6 +61,16 @@ Tstep = 0.01;
 % Control law gain
 a = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%% Notes %%%%
+% For 10 nodes
+% Tfinal = 15
+% u = 0.05
+% s = 0.4
+% For 3 nodes
+% Tfinal = 2
+% u = 0.05
+% s = 0.5
 
 % Add function path
 addpath( genpath('Functions') );
@@ -91,10 +103,9 @@ N = length( x ) / 2;
 x = reshape(x, 2, N);
 
 %%%%%%%%% Set uncertainty, sensing and communication radii %%%%%%%%%%%%%%%%
-% They can be set to differ between nodes here
-uradii = uncert_rad * ones(1,N);
-sradii = sensing_rad * ones(1,N);
-cradii = comm_rad * ones(1,N);
+uradii = 0.05 * ones(1,N);
+sradii = 0.5 * ones(1,N);
+cradii = 0.8 * ones(1,N);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -128,7 +139,7 @@ in_range = cell([1 N]);
 GVcells = cell([1 N]);
 GVrcells = cell([1 N]);
 
-% Create sim struct that contains all information, used for plots
+% Create sim struct, used for plots
 sim = struct;
 sim.plot_cells = 1;
 sim.plot_rcells = 0;
@@ -153,28 +164,27 @@ while s <= smax
     fprintf('Iteration %d/%d  %.2f%%\n', s, smax, 100*s/smax)
     
     
-	% Find the neighbors and cell of each node
-	for i=1:N
-		% Find the nodes in communication range of each node i
-		in_range{i} = in_comms_range( x, i, cradii(i) );
-		% Put node i first in the list of neighbors
+    % Find the neighbors and cell of each node
+    for i=1:N
+        % Find the nodes in range of each node
+        in_range{i} = in_comms_range( x, i, cradii(i) );
+		% Put point i first in the list of neighbors
 		in_range{i} = [i in_range{i}];
-		tmpx = x(:,in_range{i});
+        tmpx = x(:,in_range{i});
 
-		% Find the cell of each node i based on its neighbors
-		GVcells{i} = GV_cell( region, tmpx, uradii, 1 );
-		GVrcells{i} = rad_cell( x(:,i) , GVcells{i} , sradii(i));
-
-		% Update sim struct
-		sim.cells = GVcells;
-		sim.rcells = GVrcells;
-		sim.in_range = in_range;
+        % Find the cell of each node based on its neighbors
+        GVcells{i} = GV_cell( region, tmpx, uradii, 1 );
+        GVrcells{i} = rad_cell( x(:,i) , GVcells{i} , sradii(i));
+        
+        % Update struct
+        sim.cells = GVcells;
+        sim.rcells = GVrcells;
+        sim.in_range = in_range;
 	end
 	
-	% Store values and covered area - objective function H
+	% Store values and covered area - objective
     xstorage(:,:,s) = x;
     covered_area(s) = total_covered_area(region, x, sradii);
-	% If there is uncertainty, the objective H is not the covered area
     if UNCERT
 		for i=1:N
             if ~isempty(GVrcells{i})
@@ -186,7 +196,7 @@ while s <= smax
     end
 	
 	
-    % Plot network state
+    % Plot state
     if PLOT_STATE
         clf
         plot_sim( sim );
@@ -196,7 +206,6 @@ while s <= smax
     % Control law
     move_vector = zeros(2,N);
     for i=1:N % parfor slower
-		% Select control law
         switch CTRL_LAW
             case 'CELL_CENTROID'
                 move_vector(:,i) = ...
@@ -210,7 +219,7 @@ while s <= smax
             case 'GV_COMPLETE'
                 move_vector(:,i) = ...
                     a * C_integral_law_num( x(:,i), GVcells{i}, sradii(i) );
-                %%%%%%% ADD DELAUNAY CHECK HERE %%%%%%%
+                %%%%%%% ADD DELAUNAY CHECK %%%%%%%
 				for j=1:N
 					if i ~= j
 						% Integral over Hij and Hji
@@ -223,7 +232,7 @@ while s <= smax
             case 'GV_COMPROMISE'
                 move_vector(:,i) = ...
                     a * C_integral_law_num( x(:,i), GVcells{i}, sradii(i) );
-                %%%%%%% ADD DELAUNAY CHECK HERE %%%%%%%
+                %%%%%%% ADD DELAUNAY CHECK %%%%%%%
 				for j=1:N
 					if i ~= j
 						% Integral over Hij
@@ -237,17 +246,16 @@ while s <= smax
     end
     
     
-    % Simulate with ode45
+    % Simulate with ODE
     Tspan = [s*Tstep (s+1)*Tstep];
     IC = [x(1,:) x(2,:)]';
     u = [move_vector(1,:) move_vector(2,:)]';
     [T, Xsim] = ode45(@(t,y) DYNAMICS_integrator(t, y, u), Tspan, IC);
-	% Keep only the final state of the ODE simulation
     x(1,:) = Xsim(end , 1:N);
     x(2,:) = Xsim(end , N+1:end);
 
     
-    % Make sure no nodes collide
+    % Make sure no nodes overlap
     if STOP_COLLISIONS
         x_temp = x;
         for i=1:N
@@ -264,16 +272,17 @@ while s <= smax
         end
     end
     
-    % Update the sim struct with the new positions
+    % Update the struct
     sim.x = x;
 
 
-    % Pause for plot
+    % Pause for plot and debug plots
     if PLOT_STATE
 		if SAVE_FRAMES
 			plot_AABB(axis_scale, 'w.');
 			set( gca, 'Units', 'normalized', 'Position', [0 0 1 1] );
 			fname = sprintf('~/Frames/frame_%05d.png',s);
+% 			print( fname, '-dpng');
 			saveas(gcf, fname);
 		else
 			pause(0.01)
@@ -293,7 +302,7 @@ fprintf('Average iteration %.3f s\n', average_iteration)
 
 
 %%%%%%%%%%%%%%%%%%%%%%% Final plots %%%%%%%%%%%%%%%%%%%%%%%
-% Show final state if it was not shown during the simulation
+% Show state if it was not shown during the simulation
 if ~PLOT_STATE
     figure
     plot_sim( sim )
@@ -301,8 +310,9 @@ end
 
 % Create time vector
 t = Tstep*linspace(0,smax-1,smax);
+
 % Total objective H
-figure('name','Objective')
+figure
 hold on
 if UNCERT
     plot(t, 100 * H / rarea, 'b');
