@@ -1,5 +1,6 @@
-# Do not track simulation results
+# Do not track simulation results and temporary files
 *.mat
+*.m~
 
 # MATLAB GPC mex file
 gpcmex.mexa64
