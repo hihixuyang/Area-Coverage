@@ -1,5 +1,8 @@
 #!/bin/bash
 
-cp /usr/local/MATLAB/R2016b/toolbox/map/map/private/gpcmex.mexa64 ./Functions/Polygon
-cp /usr/local/MATLAB/R2015a/toolbox/map/map/private/gpcmex.mexa64 ./Functions/Polygon
-sudo chown sotiris:sotiris ./Common\ Functions/Polygon/gpcmex.mexa64
+rm -f ./Functions/Polygon/gpcmex.mexa64
+cp /usr/local/MATLAB/R2016b/toolbox/map/map/private/gpcmex.mexa64 ./Functions/Polygon/
+echo "gpcmex copied"
+sudo chown sotiris:sotiris ./Functions/Polygon/gpcmex.mexa64
+echo "Permissions fixed"
+

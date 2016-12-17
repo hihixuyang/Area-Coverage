@@ -29,15 +29,15 @@ close all
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% Set plot settings %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Simulation to load
-sim1 = 'sim_GV_COMPLETE_inreg_20161209_0059.mat';
+sim1 = 'sim_FREE_ARCS_inreg_20161217_1759.mat';
 
 % Plots to show
-TRAJECTORIES = 0;
+TRAJECTORIES = 1;
 OBJECTIVE = 0;
 AREA = 0;
 OBJECTIVE_AREA = 0;
-FINAL = 1;
-INITIAL = 1;
+FINAL = 0;
+INITIAL = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Add function path
@@ -50,7 +50,7 @@ s1.axis_scale = [-0.5 2.5 0 2.5];
 
 %%%%%%%%%% Plot trajectories %%%%%%%%%%
 if TRAJECTORIES
-	figure
+	figure('name','trajectories')
 	hold on
 	
 	% Simulation 1
@@ -65,7 +65,6 @@ if TRAJECTORIES
 	axis( s1.axis_scale );
     axis off
 	axis equal
-    title('Trajectories')
 end
 
 

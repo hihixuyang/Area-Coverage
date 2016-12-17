@@ -53,9 +53,9 @@ sensing_rad = 0.5;
 comm_rad = 0.8;
 
 % Simulation duration in seconds
-Tfinal = 2;
+Tfinal = 5;
 % Time step in seconds
-Tstep = 0.01;
+Tstep = 0.1;
 % Control law gain
 a = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -132,7 +132,7 @@ GVrcells = cell([1 N]);
 sim = struct;
 sim.plot_cells = 1;
 sim.plot_rcells = 0;
-sim.plot_comm = 0;
+sim.plot_comm = FINITE_COMM_RANGE;
 sim.region = region;
 sim.x = x;
 sim.uradii = uradii;
