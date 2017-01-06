@@ -25,4 +25,5 @@ Before using the scripts, you must copy the the `gpcmex` file from `MATLAB/[Rele
 
 ### License
 Distributed under the [MIT License](LICENSE.txt)
-
+<br>
+Copyright © 2016 Sotiris Papatheodorou
