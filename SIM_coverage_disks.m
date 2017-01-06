@@ -34,7 +34,7 @@ CTRL_LAW = 'GV_COMPLETE';
 % Use a finite communication range
 FINITE_COMM_RANGE = 0;
 % Prevent robots from colliding when coming close
-STOP_COLLISIONS = 0;
+STOP_COLLISIONS = 1;
 % Keep the nodes inside the region at all times
 KEEP_IN_REGION = 1;
 % Show the network state in each iteration
@@ -46,16 +46,16 @@ SAVE_RESULTS = 0;
 
 % Common uncertainty disk radius. Can be set to differ between nodes
 % Set to 0 for exact positioning
-uncert_rad = 0.05;
+uncert_rad = 0.09;
 % Common sensing disk radius. Must be common among nodes
 sensing_rad = 0.5;
 % Common communication radius. Can be set to differ between nodes
 comm_rad = 0.8;
 
 % Simulation duration in seconds
-Tfinal = 5;
+Tfinal = 2;
 % Time step in seconds
-Tstep = 0.1;
+Tstep = 0.01;
 % Control law gain
 a = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -65,8 +65,12 @@ addpath( genpath('Functions') );
 
 
 % Load region
-region = importdata('Input Files/region.txt');
-axis_scale = [ -0.5 3.5 -0.5 3.5 ];
+% region = importdata('Input Files/region.txt');
+% axis_scale = [ -0.5 3.5 -0.5 3.5 ];
+
+region = importdata('Input Files/region_sq.txt');
+sc = 1;
+axis_scale = [-sc sc -sc sc];
 
 % region = importdata('Input Files/region_pi.txt');
 % sc = 0.6;
@@ -84,8 +88,9 @@ rarea = polyarea_nan(region(1,:), region(2,:));
 % Load nodes
 % x = importdata('Input Files/2_nodes.txt');
 % x = importdata('Input Files/3_nodes.txt');
-x = importdata('Input Files/4_nodes.txt');
+% x = importdata('Input Files/4_nodes.txt');
 % x = importdata('Input Files/10_nodes.txt');
+x = importdata('Input Files/6_nodes_inv_tri.txt');
 x = x(2:end);
 N = length( x ) / 2;
 x = reshape(x, 2, N);
@@ -99,7 +104,7 @@ cradii = comm_rad * ones(1,N);
 
 
 if ~FINITE_COMM_RANGE
-    cradii = 2 * rdiameter * ones(1,N);
+    cradii = rdiameter * ones(1,N);
 end
 % Use guaranteed sensing radii if there is uncertainty
 sradii = sradii - uradii;
@@ -133,6 +138,7 @@ sim = struct;
 sim.plot_cells = 1;
 sim.plot_rcells = 0;
 sim.plot_comm = FINITE_COMM_RANGE;
+sim.plot_vel = 0;
 sim.region = region;
 sim.x = x;
 sim.uradii = uradii;
@@ -140,6 +146,7 @@ sim.sradii = sradii;
 sim.cradii = cradii;
 sim.cells = GVcells;
 sim.rcells = GVrcells;
+sim.velocity = zeros(2,N);
 sim.in_range = in_range;
 sim.axis = axis_scale;
 
@@ -183,14 +190,8 @@ while s <= smax
 		end
     else
         H(s) = covered_area(s);
-    end
+	end
 	
-	
-    % Plot network state
-    if PLOT_STATE
-        clf
-        plot_sim( sim );
-    end
     
     
     % Control law
@@ -251,7 +252,8 @@ while s <= smax
     if STOP_COLLISIONS
         x_temp = x;
         for i=1:N
-            x_temp(:,i) = no_collisions(region, x, i, uradii(i));
+			%%%%%%%%%%%% uradii has been increased here %%%%%%%%%%%%
+            x_temp(:,i) = no_collisions(region, x, i, uradii(i)*1.01);
         end
         x = x_temp;
     end
@@ -262,11 +264,19 @@ while s <= smax
         for i=1:N
             x(:,i) = keep_in_region(region, x(:,i), uradii(i));
         end
-    end
+	end
     
-    % Update the sim struct with the new positions
-    sim.x = x;
-
+	% Update the sim velocity
+	sim.velocity = move_vector;
+%     sim.velocity = x - sim.x;
+	
+	
+	
+	% Plot network state
+    if PLOT_STATE
+        clf
+        plot_sim( sim );
+    end
 
     % Pause for plot
     if PLOT_STATE
@@ -278,7 +288,10 @@ while s <= smax
 		else
 			pause(0.01)
 		end
-    end
+	end
+	
+	% Update the sim struct with the new positions
+	sim.x = x;
     
     
     s = s + 1;

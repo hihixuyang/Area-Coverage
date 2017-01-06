@@ -72,6 +72,13 @@ if sim.plot_comm
     end
 end
 
+% Plot velocity vectors
+if sim.plot_vel
+	for i=1:N
+		plot_poly([sim.x(:,i) sim.x(:,i) + sim.velocity(:,i)], 'm');
+	end
+end
+
 axis(sim.axis)
 axis equal
 axis off
