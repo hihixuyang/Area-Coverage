@@ -27,14 +27,14 @@ close all
 % Uncomment to select control law
 % CTRL_LAW = 'CELL_CENTROID';
 % CTRL_LAW = 'RCELL_CENTROID';
-% CTRL_LAW = 'FREE_ARCS';
-CTRL_LAW = 'GV_COMPLETE';
+CTRL_LAW = 'FREE_ARCS';
+% CTRL_LAW = 'GV_COMPLETE';
 % CTRL_LAW = 'GV_COMPROMISE';
 
 % Use a finite communication range
 FINITE_COMM_RANGE = 0;
 % Prevent robots from colliding when coming close
-STOP_COLLISIONS = 1;
+STOP_COLLISIONS = 0;
 % Keep the nodes inside the region at all times
 KEEP_IN_REGION = 1;
 % Show the network state in each iteration
@@ -42,18 +42,18 @@ PLOT_STATE = 1;
 % Save the network state in each iteration
 SAVE_FRAMES = 0;
 % Save the results to file
-SAVE_RESULTS = 0;
+SAVE_RESULTS = 1;
 
 % Common uncertainty disk radius. Can be set to differ between nodes
 % Set to 0 for exact positioning
-uncert_rad = 0.09;
+uncert_rad = 0.05;
 % Common sensing disk radius. Must be common among nodes
 sensing_rad = 0.5;
 % Common communication radius. Can be set to differ between nodes
 comm_rad = 0.8;
 
 % Simulation duration in seconds
-Tfinal = 2;
+Tfinal = 3;
 % Time step in seconds
 Tstep = 0.01;
 % Control law gain
@@ -90,10 +90,21 @@ rarea = polyarea_nan(region(1,:), region(2,:));
 % x = importdata('Input Files/3_nodes.txt');
 % x = importdata('Input Files/4_nodes.txt');
 % x = importdata('Input Files/10_nodes.txt');
-x = importdata('Input Files/6_nodes_inv_tri.txt');
-x = x(2:end);
-N = length( x ) / 2;
-x = reshape(x, 2, N);
+% x = importdata('Input Files/6_nodes_inv_tri.txt');
+% x = x(2:end);
+% N = length( x ) / 2;
+% x = reshape(x, 2, N);
+
+% Inverted triangle
+N = 6;
+x = zeros(2,N);
+bi = 0.07;
+bo = 0.14;
+t = [30 150 270 90 210 330];
+x(1,:) = cosd(t);
+x(2,:) = sind(t);
+x(:,1:3) = bi * x(:,1:3);
+x(:,4:6) = bo * x(:,4:6);
 
 %%%%%%%%% Set uncertainty, sensing and communication radii %%%%%%%%%%%%%%%%
 % They can be set to differ between nodes here
@@ -115,6 +126,9 @@ if sum(uradii) == 0
 else
     UNCERT = 1;
 end
+
+% Increase uncertainty radius for collision avoidance
+ur_e = 0.00001;
 
 
 
@@ -253,7 +267,7 @@ while s <= smax
         x_temp = x;
         for i=1:N
 			%%%%%%%%%%%% uradii has been increased here %%%%%%%%%%%%
-            x_temp(:,i) = no_collisions(region, x, i, uradii(i)*1.01);
+            x_temp(:,i) = no_collisions(region, x, i, uradii(i)+ur_e);
         end
         x = x_temp;
     end

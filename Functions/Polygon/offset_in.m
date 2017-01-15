@@ -23,19 +23,15 @@
 % Offset the convex polygon P inwards by r
 function Poffset = offset_in( P, r )
 
-d = diameter(P);
-% Add the first vertex to the end if needed
-if ~isequal(P(:,1), P(:,end))
-    P = [P P(:,1)];
-end
 N = length(P(1,:));
 
-
 Poffset = P;
-for i=1:N-1
-    edge = P(:,i:i+1);
+for i=1:N
+	v1 = P(:,i);
+	v2 = P(:,mod(i,N)+1);
+    edge = [v1 v2];
     % Check the direction of offset with the midpoint
-    midpoint = (edge(:,1)+edge(:,2))/2;
+    midpoint = (edge(:,1) + edge(:,2)) / 2;
     dir = 1;
     midpoint = point_perp(edge, midpoint, dir*10*eps);
     if ~inpolygon(midpoint(1), midpoint(2), P(1,:), P(2,:))
@@ -46,12 +42,12 @@ for i=1:N-1
     edge_offset = zeros(2,4);
     edge_offset(:,1) = point_perp(edge, edge(:,1), dir*r);
     edge_offset(:,2) = point_perp(edge, edge(:,2), dir*r);
-    edge_offset(:,3) = point_perp(edge, edge(:,2), -2*dir*r);
-    edge_offset(:,4) = point_perp(edge, edge(:,1), -2*dir*r);
+    edge_offset(:,3) = point_perp(edge, edge(:,2), -dir*r);
+    edge_offset(:,4) = point_perp(edge, edge(:,1), -dir*r);
     [xr , yr] = poly2cw(edge_offset(1,:), edge_offset(2,:));
     edge_offset = [xr ; yr];
     
     [x, y] = polybool('minus', Poffset(1,:), Poffset(2,:), ...
                             edge_offset(1,:), edge_offset(2,:));
-    Poffset = [x; y];
+    Poffset = [x ; y];
 end
