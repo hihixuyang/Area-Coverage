@@ -185,12 +185,12 @@ while s <= smax
 		% Find the cell of each node i based on its neighbors
 		GVcells{i} = GV_cell( region, tmpx, uradii, 1 );
 		GVrcells{i} = rad_cell( x(:,i) , GVcells{i} , sradii(i));
-
-		% Update sim struct
-		sim.cells = GVcells;
-		sim.rcells = GVrcells;
-		sim.in_range = in_range;
-	end
+    end
+    
+    % Update sim struct
+    sim.cells = GVcells;
+    sim.rcells = GVrcells;
+    sim.in_range = in_range;
 	
 	% Store values and covered area - objective function H
     xstorage(:,:,s) = x;
