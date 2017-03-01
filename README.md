@@ -24,6 +24,6 @@ Before using the scripts, you must copy the the `gpcmex` file from `MATLAB/[Rele
 <img src="./Screenshots/objective.png" width="49%"> <img src="./Screenshots/trajectories.png" width="49%">
 
 ### License
-Distributed under the [MIT License](LICENSE.txt)
+Distributed under the [Apache License Version 2.0](LICENSE.txt)
 <br>
 Copyright © 2016 Sotiris Papatheodorou
